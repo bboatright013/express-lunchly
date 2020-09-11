@@ -12,6 +12,7 @@ class Customer {
     this.lastName = lastName;
     this.phone = phone;
     this.notes = notes;
+    this.fullName = this.fullName();
   }
 
   /** find all customers. */
@@ -52,6 +53,53 @@ class Customer {
 
     return new Customer(customer);
   }
+/** Search for customers by name */
+
+  static async search(searchedName) {
+    const results = await db.query(
+      `SELECT id, 
+      first_name AS "firstName",  
+      last_name AS "lastName", 
+      phone, 
+      notes
+      FROM customers
+      WHERE first_name LIKE $1
+      OR last_name LIKE $1
+      `, [`%${searchedName}%`]
+    );
+    if (results.rows.length === 0) {
+      const err = new Error(`No matching customer on: ${searchedName}`);
+      err.status = 404;
+      throw err;
+    }
+    return results.rows.map(c => new Customer(c));
+
+  }
+
+  /** Get best customers */
+
+  static async best() {
+    const results = await db.query(
+      `SELECT customers.id, 
+      first_name AS "firstName",  
+      last_name AS "lastName", 
+      phone, 
+      customers.notes 
+      FROM customers 
+      JOIN reservations 
+      ON customer_id = customers.id 
+      GROUP BY customers.id, first_name, last_name 
+      ORDER BY COUNT(customer_id) DESC 
+      LIMIT 10`
+    );
+    if (results.rows.length === 0) {
+      const err = new Error(`No matching customer on: ${searchedName}`);
+      err.status = 404;
+      throw err;
+    }
+    return results.rows.map(c => new Customer(c));
+
+  }
 
   /** get all reservations for this customer. */
 
@@ -77,6 +125,12 @@ class Customer {
         [this.firstName, this.lastName, this.phone, this.notes, this.id]
       );
     }
+  }
+
+  fullName(){
+    const fullname = `${this.firstName} ${this.lastName}`;
+    this.fullName = fullname;
+    return fullname;
   }
 }
 

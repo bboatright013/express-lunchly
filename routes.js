@@ -18,6 +18,26 @@ router.get("/", async function(req, res, next) {
   }
 });
 
+/** Homepage: show list of searched customers */
+
+router.get("/search", async function(req, res, next){
+  try{
+    const customers = await Customer.search(req.query.search);
+    return res.render("customer_list.html", { customers });
+  } catch (err) {
+    return next(err);
+  }
+})
+/** Homepage: show list of best customers */
+
+router.get("/best", async function(req, res, next){
+  try{
+    const customers = await Customer.best();
+    return res.render("customer_list.html", { customers });
+  } catch (err) {
+    return next(err);
+  }
+})
 /** Form to add a new customer. */
 
 router.get("/add/", async function(req, res, next) {
